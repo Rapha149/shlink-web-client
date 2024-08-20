@@ -12,7 +12,7 @@ USER root
 RUN rm -r /usr/share/nginx/html && rm /etc/nginx/conf.d/default.conf
 COPY config/docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY scripts/docker/servers_from_env.sh /docker-entrypoint.d/30-shlink-servers-json.sh
-COPY --from=node /shlink-web-client/build /usr/share/nginx/html
+COPY --from=node /shlink-web-client/build /usr/share/nginx/html/admin
 
 # This is required by 30-shlink-servers-json.sh to be writable for UID
 RUN echo '[]' > /usr/share/nginx/html/servers.json \
