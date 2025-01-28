@@ -3,7 +3,7 @@ import type { Settings } from '@shlinkio/shlink-web-component/settings';
 import { clsx } from 'clsx';
 import type { FC } from 'react';
 import { useEffect, useRef } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router';
 import { AppUpdateBanner } from '../common/AppUpdateBanner';
 import { NotFound } from '../common/NotFound';
 import type { FCWithDeps } from '../container/utils';
@@ -50,8 +50,8 @@ const App: FCWithDeps<AppProps, AppDeps> = (
   const isHome = location.pathname === '/';
 
   useEffect(() => {
-    // Try to fetch the remote servers if the list is empty at first
-    // We use a ref because we don't care if the servers list becomes empty later
+    // Try to fetch the remote servers if the list is empty during first render.
+    // We use a ref because we don't care if the servers list becomes empty later.
     if (Object.keys(initialServers.current).length === 0) {
       fetchServers();
     }
@@ -66,14 +66,18 @@ const App: FCWithDeps<AppProps, AppDeps> = (
       <MainHeader />
 
       <div className="app">
-        <div className={clsx('shlink-wrapper', { 'd-flex d-md-block align-items-center': isHome })}>
+        <div className={clsx('shlink-wrapper', { 'd-flex align-items-center pt-3': isHome })}>
           <Routes>
             <Route index element={<Home />} />
-            <Route path="/settings/*" element={<Settings />} />
+            <Route path="/settings">
+              {['', '*'].map((path) => <Route key={path} path={path} element={<Settings />} />)}
+            </Route>
             <Route path="/manage-servers" element={<ManageServers />} />
             <Route path="/server/create" element={<CreateServer />} />
             <Route path="/server/:serverId/edit" element={<EditServer />} />
-            <Route path="/server/:serverId/*" element={<ShlinkWebComponentContainer />} />
+            <Route path="/server/:serverId">
+              {['', '*'].map((path) => <Route key={path} path={path} element={<ShlinkWebComponentContainer />} />)}
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

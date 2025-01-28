@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 import { manifest } from './manifest';
-import pack from './package.json';
+import pack from './package.json' with { type: 'json' };
 
 const homepage = pack.homepage?.trim();
 

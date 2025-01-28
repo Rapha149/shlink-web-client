@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import pack from '../package.json';
 import { container } from './container';
 import { setUpStore } from './container/store';
@@ -10,7 +10,7 @@ import './index.scss';
 const store = setUpStore(container);
 const { App, ScrollToTop, ErrorHandler, appUpdateAvailable } = container;
 
-createRoot(document.getElementById('root')!).render( // eslint-disable-line @typescript-eslint/no-non-null-assertion
+createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
     <BrowserRouter basename={pack.homepage}>
       <ErrorHandler>

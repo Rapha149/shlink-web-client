@@ -9,8 +9,99 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * *Nothing*
 
 ### Changed
-* Update to `@shlinkio/shlink-web-component` 0.7 and use `ShlinkWebSettings` to replace local settings UI.
+* Update to `react-router` 7.0
+* Update to `@shlinkio/shlink-frontend-kit` 0.7.0
+* Update to `@shlinkio/shlink-web-component` 0.12.0
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* *Nothing*
+
+
+## [4.3.0] - 2024-11-30
+### Added
+* [#1360](https://github.com/shlinkio/shlink-web-client/issues/1360) Added ability for server IDs to be generated based on the server name and URL, instead of generating a random UUID.
+
+    This can improve sharing a predefined set of servers cia servers.json, env vars, or simply export and import your servers in some other device, and then be able to share server URLs which continue working.
+
+    All existing servers will keep their generated IDs in existing devices for backwards compatibility, but newly created servers will use the new approach.
+
+* [shlink-web-component#491](https://github.com/shlinkio/shlink-web-component/issues/491) Add support for colors in QR code configurator.
+* [shlink-web-component#515](https://github.com/shlinkio/shlink-web-component/issues/515) Add support for geolocation redirect conditions, when using Shlink 4.3 or newer.
+* [shlink-web-component#514](https://github.com/shlinkio/shlink-web-component/issues/514) Allow filtering short URLs list by domain, when using Shlink 4.3 or newer.
+* [shlink-web-component#520](https://github.com/shlinkio/shlink-web-component/issues/520) Allow navigating from domains list to short URLs list filtered by one domain, when using Shlink 4.3 or newer.
+* [shlink-web-component#517](https://github.com/shlinkio/shlink-web-component/issues/517) Update list of known domains when a short URL is created with a new domain.
+* [shlink-web-component#292](https://github.com/shlinkio/shlink-web-component/issues/292) Add icon in short URLs list indicating if a short URL has redirect rules.
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [shlink-web-component#504](https://github.com/shlinkio/shlink-web-component/issues/504) Fix fallback interval not causing new visits to be loaded.
+
+
+## [4.2.2] - 2024-10-19
+### Added
+* *Nothing*
+
+### Changed
+* Update to `@shlinkio/shlink-frontend-kit` 0.6.0
+* Update to `@shlinkio/shlink-web-component` 0.10.1
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [shlink-web-component#475](https://github.com/shlinkio/shlink-web-component/issues/475) Fix incorrect amount of dots being displayed in line charts when the difference in days/weeks/months is rounded up.
+
+
+## [4.2.1] - 2024-10-09
+### Added
+* *Nothing*
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [#1325](https://github.com/shlinkio/shlink-web-client/issues/1325) Get dependency on `uuid` package back, as `crypto.randomUUID()` can only be used in [secure contexts](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
+* [shlink-web-component#461](https://github.com/shlinkio/shlink-web-component/issues/461) Ensure `shortUrlsList.confirmDeletion` setting is `true` in any case, except when explicitly set to `false`.
+* [shlink-web-component#237](https://github.com/shlinkio/shlink-web-component/issues/237) Set darker color for previous period in charts, when light theme is enabled.
+* [shlink-web-component#246](https://github.com/shlinkio/shlink-web-component/issues/246) Fix selected date range not reflected in visits comparison date range selector, when selecting it in the line chart via drag'n'drop.
+
+
+## [4.2.0] - 2024-10-07
+### Added
+* [shlink-web-component#411](https://github.com/shlinkio/shlink-web-component/issues/411) Add support for `ip-address` redirect conditions when Shlink server is >=4.2
+* [shlink-web-component#196](https://github.com/shlinkio/shlink-web-component/issues/196) Allow active date range to be changed by selecting a range in visits and visits-comparison line charts.
+* [shlink-web-component#307](https://github.com/shlinkio/shlink-web-component/issues/307) Add new setting to disable short URL deletions confirmation.
+* [shlink-web-component#435](https://github.com/shlinkio/shlink-web-component/issues/435) Allow toggling between displaying raw user agent and parsed browser/OS in visits table.
+* [shlink-web-component#197](https://github.com/shlinkio/shlink-web-component/issues/197) Allow line charts to be expanded to the full size of the viewport, both in individual visits views, and when comparing visits.
+* [shlink-web-component#382](https://github.com/shlinkio/shlink-web-component/issues/382) Initialize QR code modal with all params unset, so that they fall back to the server defaults. Additionally, allow them to be unset if desired.
+
+### Changed
+* Use `ShlinkWebSettings` from `@shlinkio/shlink-web-component` to replace local settings UI.
 * Update to `@shlinkio/eslint-config-js-coding-standard` 3.0, and migrate to ESLint flat config.
+* Remove dependency on `uuid` package, and use `crypto.randomUUID()` instead.
 
 ### Deprecated
 * *Nothing*

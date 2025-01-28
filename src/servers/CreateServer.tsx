@@ -1,15 +1,15 @@
 import type { TimeoutToggle } from '@shlinkio/shlink-frontend-kit';
 import { Result, useToggle } from '@shlinkio/shlink-frontend-kit';
 import type { FC } from 'react';
-import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Button } from 'reactstrap';
-import { v4 as uuid } from 'uuid';
 import { NoMenuLayout } from '../common/NoMenuLayout';
 import type { FCWithDeps } from '../container/utils';
 import { componentFactory, useDependencies } from '../container/utils';
 import { useGoBack } from '../utils/helpers/hooks';
 import type { ServerData, ServersMap, ServerWithId } from './data';
+import { ensureUniqueIds } from './helpers';
 import { DuplicatedServersModal } from './helpers/DuplicatedServersModal';
 import type { ImportServersBtnProps } from './helpers/ImportServersBtn';
 import { ServerForm } from './helpers/ServerForm';
@@ -44,32 +44,29 @@ const CreateServer: FCWithDeps<CreateServerProps, CreateServerDeps> = ({ servers
   const [errorImporting, setErrorImporting] = useTimeoutToggle(false, SHOW_IMPORT_MSG_TIME);
   const [isConfirmModalOpen, toggleConfirmModal] = useToggle();
   const [serverData, setServerData] = useState<ServerData>();
-  const saveNewServer = useCallback((theServerData: ServerData) => {
-    const id = uuid();
+  const saveNewServer = useCallback((newServerData: ServerData) => {
+    const [newServerWithUniqueId] = ensureUniqueIds(servers, [newServerData]);
 
-    createServers([{ ...theServerData, id }]);
-    navigate(`/server/${id}`);
-  }, [createServers, navigate]);
-
-  useEffect(() => {
-    if (!serverData) {
-      return;
-    }
+    createServers([newServerWithUniqueId]);
+    navigate(`/server/${newServerWithUniqueId.id}`);
+  }, [createServers, navigate, servers]);
+  const onSubmit = useCallback((newServerData: ServerData) => {
+    setServerData(newServerData);
 
     const serverExists = Object.values(servers).some(
-      ({ url, apiKey }) => serverData?.url === url && serverData?.apiKey === apiKey,
+      ({ url, apiKey }) => newServerData.url === url && newServerData.apiKey === apiKey,
     );
 
     if (serverExists) {
       toggleConfirmModal();
     } else {
-      saveNewServer(serverData);
+      saveNewServer(newServerData);
     }
-  }, [saveNewServer, serverData, servers, toggleConfirmModal]);
+  }, [saveNewServer, servers, toggleConfirmModal]);
 
   return (
     <NoMenuLayout>
-      <ServerForm title={<h5 className="mb-0">Add new server</h5>} onSubmit={setServerData}>
+      <ServerForm title={<h5 className="mb-0">Add new server</h5>} onSubmit={onSubmit}>
         {!hasServers && (
           <ImportServersBtn tooltipPlacement="top" onImport={setServersImported} onImportError={setErrorImporting} />
         )}

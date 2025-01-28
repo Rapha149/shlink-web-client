@@ -3,9 +3,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { TimeoutToggle } from '@shlinkio/shlink-frontend-kit';
 import { Result, SearchField, SimpleCard } from '@shlinkio/shlink-frontend-kit';
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Button, Row } from 'reactstrap';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router';
+import { Button } from 'reactstrap';
 import { NoMenuLayout } from '../common/NoMenuLayout';
 import type { FCWithDeps } from '../container/utils';
 import { componentFactory, useDependencies } from '../container/utils';
@@ -34,37 +34,32 @@ const ManageServers: FCWithDeps<ManageServersProps, ManageServersDeps> = ({ serv
     useTimeoutToggle,
     ManageServersRow,
   } = useDependencies(ManageServers);
-  const allServers = Object.values(servers);
-  const [serversList, setServersList] = useState(allServers);
-  const filterServers = (searchTerm: string) => setServersList(
-    allServers.filter(({ name, url }) => `${name} ${url}`.toLowerCase().match(searchTerm.toLowerCase())),
+  const [searchTerm, setSearchTerm] = useState('');
+  const allServers = useMemo(() => Object.values(servers), [servers]);
+  const filteredServers = useMemo(
+    () => allServers.filter(({ name, url }) => `${name} ${url}`.toLowerCase().match(searchTerm.toLowerCase())),
+    [allServers, searchTerm],
   );
-  const hasAutoConnect = serversList.some(({ autoConnect }) => !!autoConnect);
+  const hasAutoConnect = allServers.some(({ autoConnect }) => !!autoConnect);
   const [errorImporting, setErrorImporting] = useTimeoutToggle(false, SHOW_IMPORT_MSG_TIME);
 
-  useEffect(() => {
-    setServersList(Object.values(servers));
-  }, [servers]);
-
   return (
-    <NoMenuLayout>
-      <SearchField className="mb-3" onChange={filterServers} />
+    <NoMenuLayout className="d-flex flex-column gap-3">
+      <SearchField onChange={setSearchTerm} />
 
-      <Row className="mb-3">
-        <div className="col-md-6 d-flex d-md-block mb-2 mb-md-0">
+      <div className="d-flex flex-column flex-md-row gap-2">
+        <div className="d-flex gap-2">
           <ImportServersBtn className="flex-fill" onImportError={setErrorImporting}>Import servers</ImportServersBtn>
-          {allServers.length > 0 && (
-            <Button outline className="ms-2 flex-fill" onClick={async () => serversExporter.exportServers()}>
+          {filteredServers.length > 0 && (
+            <Button outline className="flex-fill" onClick={async () => serversExporter.exportServers()}>
               <FontAwesomeIcon icon={exportIcon} fixedWidth /> Export servers
             </Button>
           )}
         </div>
-        <div className="col-md-6 text-md-end d-flex d-md-block">
-          <Button outline color="primary" className="flex-fill" tag={Link} to="/server/create">
-            <FontAwesomeIcon icon={plusIcon} fixedWidth /> Add a server
-          </Button>
-        </div>
-      </Row>
+        <Button outline color="primary" className="ms-md-auto" tag={Link} to="/server/create">
+          <FontAwesomeIcon icon={plusIcon} fixedWidth /> Add a server
+        </Button>
+      </div>
 
       <SimpleCard>
         <table className="table table-hover responsive-table mb-0">
@@ -77,8 +72,8 @@ const ManageServers: FCWithDeps<ManageServersProps, ManageServersDeps> = ({ serv
             </tr>
           </thead>
           <tbody>
-            {!serversList.length && <tr className="text-center"><td colSpan={4}>No servers found.</td></tr>}
-            {serversList.map((server) => (
+            {!filteredServers.length && <tr className="text-center"><td colSpan={4}>No servers found.</td></tr>}
+            {filteredServers.map((server) => (
               <ManageServersRow key={server.id} server={server} hasAutoConnect={hasAutoConnect} />
             ))}
           </tbody>
@@ -86,7 +81,7 @@ const ManageServers: FCWithDeps<ManageServersProps, ManageServersDeps> = ({ serv
       </SimpleCard>
 
       {errorImporting && (
-        <div className="mt-3">
+        <div>
           <Result type="error">The servers could not be imported. Make sure the format is correct.</Result>
         </div>
       )}
