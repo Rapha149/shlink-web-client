@@ -1,13 +1,11 @@
 import type { HttpClient } from '@shlinkio/shlink-js-sdk';
 import { ShlinkApiClient } from '@shlinkio/shlink-js-sdk';
-import type { GetState } from '../../container/types';
 import type { ServerWithId } from '../../servers/data';
 import { hasServerData } from '../../servers/data';
+import type { GetState } from '../../store';
 
-const apiClients: Record<string, ShlinkApiClient> = {};
+const apiClients: Map<string, ShlinkApiClient> = new Map();
 
-const isGetState = (getStateOrSelectedServer: GetState | ServerWithId): getStateOrSelectedServer is GetState =>
-  typeof getStateOrSelectedServer === 'function';
 const getSelectedServerFromState = (getState: GetState): ServerWithId => {
   const { selectedServer } = getState();
   if (!hasServerData(selectedServer)) {
@@ -18,13 +16,22 @@ const getSelectedServerFromState = (getState: GetState): ServerWithId => {
 };
 
 export const buildShlinkApiClient = (httpClient: HttpClient) => (getStateOrSelectedServer: GetState | ServerWithId) => {
-  const { url: baseUrl, apiKey } = isGetState(getStateOrSelectedServer)
+  const { url: baseUrl, apiKey, forwardCredentials } = typeof getStateOrSelectedServer === 'function'
     ? getSelectedServerFromState(getStateOrSelectedServer)
     : getStateOrSelectedServer;
-  const serverKey = `${apiKey}_${baseUrl}`;
+  const serverKey = `${apiKey}_${baseUrl}_${forwardCredentials ? 'forward' : 'no-forward'}`;
+  const existingApiClient = apiClients.get(serverKey);
 
-  const apiClient = apiClients[serverKey] ?? new ShlinkApiClient(httpClient, { apiKey, baseUrl });
-  apiClients[serverKey] = apiClient;
+  if (existingApiClient) {
+    return existingApiClient;
+  }
+
+  const apiClient = new ShlinkApiClient(
+    httpClient,
+    { apiKey, baseUrl },
+    { requestCredentials: forwardCredentials ? 'include' : undefined },
+  );
+  apiClients.set(serverKey, apiClient);
 
   return apiClient;
 };

@@ -4,14 +4,153 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
+## [4.7.0] - 2026-02-04
+### Added
+* [shlink-web-component] Add support for Shlink 5.0.0, by supporting date-based redirect conditions.
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* *Nothing*
+
+
+## [4.6.2] - 2025-11-15
 ### Added
 * *Nothing*
 
 ### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [shlink-web-component#878](https://github.com/shlinkio/shlink-web-component/issues/878) Fix real-time updates interval setting being ignored.
+
+
+## [4.6.1] - 2025-11-15
+### Added
+* *Nothing*
+
+### Changed
+* [#802](https://github.com/shlinkio/shlink-web-client/issues/802) Improve dependency injection in components.
+* Stop injecting redux state and actions.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* Fix small UI issues.
+
+
+## [4.6.0] - 2025-11-12
+### Added
+* [shlink-web-component#839](https://github.com/shlinkio/shlink-web-component/issues/839) Allow filtering short URLs by excluded tags when using Shlink >=4.6.0
+* [shlink-web-component#838](https://github.com/shlinkio/shlink-web-component/issues/838) Allow filtering tag, orphan and non-orphan visits by domain, when using Shlink >=4.6.0
+* [shlink-web-component#784](https://github.com/shlinkio/shlink-web-component/issues/784) Add optional `long-url` query parameter to short URL creation to prefill the long URL programmatically.
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* Drop support for Shlink older than 4.0.0
+
+### Fixed
+* *Nothing*
+
+
+## [4.5.1] - 2025-08-13
+### Added
+* *Nothing*
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [#1637](https://github.com/shlinkio/shlink-web-client/issues/1637) Fix brand color used in PWA
+* [#1636](https://github.com/shlinkio/shlink-web-client/issues/1636) Make sure sidebar toggle is rendered only in sections where the sidebar exists.
+
+
+## [4.5.0] - 2025-08-08
+### Added
+* [shlink-web-component#755](https://github.com/shlinkio/shlink-web-component/issues/755) Add support for `any-value-query-param` and `valueless-query-param` redirect conditions when using Shlink >=4.5.0.
+* [shlink-web-component#756](https://github.com/shlinkio/shlink-web-component/issues/756) Add support for desktop device types on device redirect conditions, when using Shlink >=4.5.0.
+* [shlink-web-component#713](https://github.com/shlinkio/shlink-web-component/issues/713) Expose a new `ShlinkSidebarToggleButton` component that can be used to customize the location of the sidebar toggle, rather than making it assume there's a header bar and position it there.
+* [shlink-web-component#657](https://github.com/shlinkio/shlink-web-component/issues/657) Allow visits table columns to be customized via settings, and add a new optional "Region" column.
+
+  As a side effect, the "Show user agent" toggle has been removed from the list, as this can now be globally configured in the settings.
+
+### Changed
+* Update to FontAwesome 7
+* Update to Recharts 3
+* Update to `@shlinkio/shlink-web-component` 0.16.1
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [shlink-web-component#698](https://github.com/shlinkio/shlink-web-component/issues/698) Fix line chart selection triggering after clicking a dot in the chart. It now works only when dragging while the mouse is clicked.
+
+
+## [4.4.1] - 2025-06-23
+### Added
+* *Nothing*
+
+### Changed
+* [shlink-web-component#661](https://github.com/shlinkio/shlink-web-component/issues/661) and [#1571](https://github.com/shlinkio/shlink-web-client/issues/1571) Fully replace bootstrap with tailwind.
+* Add the new light theme brand color.
+* Update to `@shlinkio/shlink-frontend-kit` 1.0.0 and `@shlinkio/shlink-web-component` 0.15
+* Replace reactstrap nav bar with `NavBar` component from `@shlinkio/shlink-frontend-kit`
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* *Nothing*
+
+
+## [4.4.0] - 2025-04-20
+### Added
+* [#1510](https://github.com/shlinkio/shlink-web-client/issues/1510) Existing HTTP credentials (cookies, TLS certs, authentication headers) can now be forwarded to the API server if appropriate [CORS headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Credentials) are set
+* [shlink-web-component#637](https://github.com/shlinkio/shlink-web-component/pull/637) QR codes are now generated client-side, without hitting Shlink.
+* [shlink-web-component#641](https://github.com/shlinkio/shlink-web-component/issues/641) It is now possible to provide any logo to be used with QR codes.
+* [shlink-web-component#640](https://github.com/shlinkio/shlink-web-component/issues/640) Allow default QR code settings to be handled via app settings.
+
+### Changed
 * Update to `react-router` 7.0
-* Update to `@shlinkio/shlink-frontend-kit` 0.7.0
-* Update to `@shlinkio/shlink-web-component` 0.12.0
+* Update to `@shlinkio/shlink-frontend-kit` 0.8.x
+* Update to `@shlinkio/shlink-web-component` 0.13.x
+* Update to `@shlinkio/shlink-js-sdk` 2.0.0
+* Add `eslint-plugin-react-compiler`
+* Run unit tests in a headless browser using vitest browser mode and playwright.
 
 ### Deprecated
 * *Nothing*
@@ -317,7 +456,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * [#774](https://github.com/shlinkio/shlink-web-client/issues/774) Dropped support for Shlink older than 2.8.0.
 
 ### Fixed
-* [#715](https://github.com/shlinkio/shlink-web-client/issues/715) Fixed connection still failing on miss-configured servers, after editing their params to set proper values.
+* [#715](https://github.com/shlinkio/shlink-web-client/issues/715) Fixed connection still failing on misconfigured servers, after editing their params to set proper values.
 
 
 ## [3.8.2] - 2022-12-17

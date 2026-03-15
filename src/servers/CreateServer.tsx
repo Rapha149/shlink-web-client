@@ -1,48 +1,42 @@
-import type { TimeoutToggle } from '@shlinkio/shlink-frontend-kit';
-import { Result, useToggle } from '@shlinkio/shlink-frontend-kit';
+import type { ResultProps, TimeoutToggle } from '@shlinkio/shlink-frontend-kit';
+import { Button, Result, useToggle } from '@shlinkio/shlink-frontend-kit';
 import type { FC } from 'react';
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button } from 'reactstrap';
 import { NoMenuLayout } from '../common/NoMenuLayout';
-import type { FCWithDeps } from '../container/utils';
-import { componentFactory, useDependencies } from '../container/utils';
+import { withDependencies } from '../container/context';
 import { useGoBack } from '../utils/helpers/hooks';
-import type { ServerData, ServersMap, ServerWithId } from './data';
+import type { ServerData } from './data';
 import { ensureUniqueIds } from './helpers';
 import { DuplicatedServersModal } from './helpers/DuplicatedServersModal';
-import type { ImportServersBtnProps } from './helpers/ImportServersBtn';
+import { ImportServersBtn } from './helpers/ImportServersBtn';
 import { ServerForm } from './helpers/ServerForm';
+import { withoutSelectedServer } from './helpers/withoutSelectedServer';
+import { useServers } from './reducers/servers';
 
 const SHOW_IMPORT_MSG_TIME = 4000;
 
-type CreateServerProps = {
-  createServers: (servers: ServerWithId[]) => void;
-  servers: ServersMap;
-};
-
-type CreateServerDeps = {
-  ImportServersBtn: FC<ImportServersBtnProps>;
+export type CreateServerProps = {
   useTimeoutToggle: TimeoutToggle;
 };
 
-const ImportResult = ({ type }: { type: 'error' | 'success' }) => (
-  <div className="mt-3">
-    <Result type={type}>
-      {type === 'success' && 'Servers properly imported. You can now select one from the list :)'}
-      {type === 'error' && 'The servers could not be imported. Make sure the format is correct.'}
+const ImportResult = ({ variant }: Pick<ResultProps, 'variant'>) => (
+  <div className="mt-4">
+    <Result variant={variant}>
+      {variant === 'success' && 'Servers properly imported. You can now select one from the list :)'}
+      {variant === 'error' && 'The servers could not be imported. Make sure the format is correct.'}
     </Result>
   </div>
 );
 
-const CreateServer: FCWithDeps<CreateServerProps, CreateServerDeps> = ({ servers, createServers }) => {
-  const { ImportServersBtn, useTimeoutToggle } = useDependencies(CreateServer);
+const CreateServerBase: FC<CreateServerProps> = withoutSelectedServer(({ useTimeoutToggle }) => {
+  const { servers, createServers } = useServers();
   const navigate = useNavigate();
   const goBack = useGoBack();
   const hasServers = !!Object.keys(servers).length;
-  const [serversImported, setServersImported] = useTimeoutToggle(false, SHOW_IMPORT_MSG_TIME);
-  const [errorImporting, setErrorImporting] = useTimeoutToggle(false, SHOW_IMPORT_MSG_TIME);
-  const [isConfirmModalOpen, toggleConfirmModal] = useToggle();
+  const [serversImported, setServersImported] = useTimeoutToggle({ delay: SHOW_IMPORT_MSG_TIME });
+  const [errorImporting, setErrorImporting] = useTimeoutToggle({ delay: SHOW_IMPORT_MSG_TIME });
+  const { flag: isConfirmModalOpen, toggle: toggleConfirmModal } = useToggle();
   const [serverData, setServerData] = useState<ServerData>();
   const saveNewServer = useCallback((newServerData: ServerData) => {
     const [newServerWithUniqueId] = ensureUniqueIds(servers, [newServerData]);
@@ -66,25 +60,25 @@ const CreateServer: FCWithDeps<CreateServerProps, CreateServerDeps> = ({ servers
 
   return (
     <NoMenuLayout>
-      <ServerForm title={<h5 className="mb-0">Add new server</h5>} onSubmit={onSubmit}>
+      <ServerForm title="Add new server" onSubmit={onSubmit}>
         {!hasServers && (
-          <ImportServersBtn tooltipPlacement="top" onImport={setServersImported} onImportError={setErrorImporting} />
+          <ImportServersBtn tooltipPlacement="top" onImport={setServersImported} onError={setErrorImporting} />
         )}
-        {hasServers && <Button outline onClick={goBack}>Cancel</Button>}
-        <Button outline color="primary" className="ms-2">Create server</Button>
+        {hasServers && <Button variant="secondary" onClick={goBack}>Cancel</Button>}
+        <Button type="submit">Create server</Button>
       </ServerForm>
 
-      {serversImported && <ImportResult type="success" />}
-      {errorImporting && <ImportResult type="error" />}
+      {serversImported && <ImportResult variant="success" />}
+      {errorImporting && <ImportResult variant="error" />}
 
       <DuplicatedServersModal
-        isOpen={isConfirmModalOpen}
+        open={isConfirmModalOpen}
         duplicatedServers={serverData ? [serverData] : []}
-        onDiscard={goBack}
-        onSave={() => serverData && saveNewServer(serverData)}
+        onClose={goBack}
+        onConfirm={() => serverData && saveNewServer(serverData)}
       />
     </NoMenuLayout>
   );
-};
+});
 
-export const CreateServerFactory = componentFactory(CreateServer, ['ImportServersBtn', 'useTimeoutToggle']);
+export const CreateServer = withDependencies(CreateServerBase, ['useTimeoutToggle']);

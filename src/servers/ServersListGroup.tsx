@@ -1,35 +1,41 @@
 import { faChevronRight as chevronIcon } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { clsx } from 'clsx';
-import type { FC, PropsWithChildren } from 'react';
+import type { FC } from 'react';
 import { Link } from 'react-router';
-import { ListGroup, ListGroupItem } from 'reactstrap';
 import type { ServerWithId } from './data';
-import './ServersListGroup.scss';
 
-type ServersListGroupProps = PropsWithChildren<{
+type ServersListGroupProps = {
   servers: ServerWithId[];
-  embedded?: boolean;
-}>;
+  borderless?: boolean;
+};
 
 const ServerListItem = ({ id, name }: { id: string; name: string }) => (
-  <ListGroupItem tag={Link} to={`/server/${id}`} className="servers-list__server-item">
-    {name}
-    <FontAwesomeIcon icon={chevronIcon} className="servers-list__server-item-icon" />
-  </ListGroupItem>
+  <Link
+    to={`/server/${id}`}
+    className={clsx(
+      'servers-list__server-item',
+      'flex items-center justify-between gap-x-2 px-4 py-3',
+      'rounded-none hover:bg-lm-secondary hover:dark:bg-dm-secondary',
+      'border-b last:border-0 border-lm-border dark:border-dm-border',
+    )}
+  >
+    <span className="truncate">{name}</span>
+    <FontAwesomeIcon icon={chevronIcon} />
+  </Link>
 );
 
-export const ServersListGroup: FC<ServersListGroupProps> = ({ servers, children, embedded = false }) => (
-  <>
-    {children && <div data-testid="title" className="mb-0 fs-5 fw-normal lh-sm">{children}</div>}
-    {servers.length > 0 && (
-      <ListGroup
-        data-testid="list"
-        tag="div"
-        className={clsx('servers-list__list-group', { 'servers-list__list-group--embedded': embedded })}
-      >
-        {servers.map(({ id, name }) => <ServerListItem key={id} id={id} name={name} />)}
-      </ListGroup>
-    )}
-  </>
+export const ServersListGroup: FC<ServersListGroupProps> = ({ servers, borderless }) => (
+  servers.length > 0 && (
+    <div
+      data-testid="list"
+      className={clsx(
+        'w-full border-lm-border dark:border-dm-border',
+        'md:max-h-56 md:overflow-y-auto -mb-1 scroll-thin',
+        { 'border-y': !borderless },
+      )}
+    >
+      {servers.map(({ id, name }) => <ServerListItem key={id} id={id} name={name} />)}
+    </div>
+  )
 );

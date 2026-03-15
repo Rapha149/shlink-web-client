@@ -1,27 +1,23 @@
-import { render, screen } from '@testing-library/react';
-import { fromPartial } from '@total-typescript/shoehorn';
+import { Table } from '@shlinkio/shlink-frontend-kit';
+import { screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import type { ServerWithId } from '../../src/servers/data';
-import { ManageServersRowFactory } from '../../src/servers/ManageServersRow';
+import { ManageServersRow } from '../../src/servers/ManageServersRow';
 import { checkAccessibility } from '../__helpers__/accessibility';
+import { renderWithStore } from '../__helpers__/setUpTest';
 
 describe('<ManageServersRow />', () => {
-  const ManageServersRow = ManageServersRowFactory(fromPartial({
-    ManageServersRowDropdown: () => <span>ManageServersRowDropdown</span>,
-  }));
   const server: ServerWithId = {
     name: 'My server',
     url: 'https://example.com',
     apiKey: '123',
     id: 'abc',
   };
-  const setUp = (hasAutoConnect = false, autoConnect = false) => render(
+  const setUp = (hasAutoConnect = false, autoConnect = false) => renderWithStore(
     <MemoryRouter>
-      <table>
-        <tbody>
-          <ManageServersRow server={{ ...server, autoConnect }} hasAutoConnect={hasAutoConnect} />
-        </tbody>
-      </table>
+      <Table header={<Table.Row />}>
+        <ManageServersRow server={{ ...server, autoConnect }} hasAutoConnect={hasAutoConnect} />
+      </Table>
     </MemoryRouter>,
   );
 
@@ -32,16 +28,12 @@ describe('<ManageServersRow />', () => {
     [false, 3],
   ])('renders expected amount of columns', (hasAutoConnect, expectedCols) => {
     setUp(hasAutoConnect);
-
-    const td = screen.getAllByRole('cell');
-    const th = screen.getAllByRole('columnheader');
-
-    expect(td.length + th.length).toEqual(expectedCols);
+    expect(screen.getAllByRole('cell')).toHaveLength(expectedCols);
   });
 
-  it('renders a dropdown', () => {
+  it('renders an options dropdown', () => {
     setUp();
-    expect(screen.getByText('ManageServersRowDropdown')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Options' })).toBeInTheDocument();
   });
 
   it.each([

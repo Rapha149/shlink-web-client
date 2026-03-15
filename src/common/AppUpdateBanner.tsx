@@ -1,34 +1,46 @@
 import { faSyncAlt as reloadIcon } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SimpleCard, useToggle } from '@shlinkio/shlink-frontend-kit';
-import type { MouseEventHandler } from 'react';
-import { forwardRef, useCallback } from 'react';
-import { Alert, Button } from 'reactstrap';
-import './AppUpdateBanner.scss';
+import { Button, Card, CloseButton,useToggle  } from '@shlinkio/shlink-frontend-kit';
+import { clsx } from 'clsx';
+import type { FC } from 'react';
+import { useCallback } from 'react';
 
 interface AppUpdateBannerProps {
   isOpen: boolean;
-  toggle: MouseEventHandler<any>;
+  onClose: () => void;
   forceUpdate: () => void;
 }
 
-export const AppUpdateBanner = forwardRef<HTMLElement, AppUpdateBannerProps>(({ isOpen, toggle, forceUpdate }, ref) => {
-  const [isUpdating,, setUpdating] = useToggle();
+export const AppUpdateBanner: FC<AppUpdateBannerProps> = ({ isOpen, onClose, forceUpdate }) => {
+  const { flag: isUpdating, setToTrue: setUpdating } = useToggle();
   const update = useCallback(() => {
     setUpdating();
     forceUpdate();
   }, [forceUpdate, setUpdating]);
 
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <Alert className="app-update-banner" isOpen={isOpen} toggle={toggle} tag={SimpleCard} color="secondary" innerRef={ref}>
-      <h4 className="mb-4">This app has just been updated!</h4>
-      <p className="mb-0">
+    <Card
+      role="alert"
+      className={clsx(
+        'w-[700px] max-w-[calc(100%-30px)]',
+        'fixed top-[35px] left-[50%] translate-x-[-50%] z-[1040]',
+      )}
+    >
+      <Card.Header className="flex items-center justify-between">
+        <h5>This app has just been updated!</h5>
+        <CloseButton onClick={onClose} />
+      </Card.Header>
+      <Card.Body className="flex gap-4 items-center justify-between max-md:flex-col">
         Restart it to enjoy the new features.
-        <Button role="button" disabled={isUpdating} className="ms-2" color="secondary" size="sm" onClick={update}>
-          {!isUpdating && <>Restart now <FontAwesomeIcon icon={reloadIcon} className="ms-1" /></>}
+        <Button disabled={isUpdating} variant="secondary" solid onClick={update}>
+          {!isUpdating && <>Restart now <FontAwesomeIcon icon={reloadIcon} /></>}
           {isUpdating && <>Restarting...</>}
         </Button>
-      </p>
-    </Alert>
+      </Card.Body>
+    </Card>
   );
-});
+};

@@ -1,21 +1,19 @@
 import { faExternalLinkAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button, Card } from '@shlinkio/shlink-frontend-kit';
 import { clsx } from 'clsx';
+import type { FC } from 'react';
 import { useEffect } from 'react';
 import { ExternalLink } from 'react-external-link';
-import { Link, useNavigate } from 'react-router';
-import { Card } from 'reactstrap';
-import type { ServersMap } from '../servers/data';
+import { useNavigate } from 'react-router';
+import { withoutSelectedServer } from '../servers/helpers/withoutSelectedServer';
+import { useServers } from '../servers/reducers/servers';
 import { ServersListGroup } from '../servers/ServersListGroup';
 import { ShlinkLogo } from './img/ShlinkLogo';
-import './Home.scss';
 
-interface HomeProps {
-  servers: ServersMap;
-}
-
-export const Home = ({ servers }: HomeProps) => {
+export const Home: FC = withoutSelectedServer(() => {
   const navigate = useNavigate();
+  const { servers } = useServers();
   const serversList = Object.values(servers);
   const hasServers = serversList.length > 0;
 
@@ -28,45 +26,45 @@ export const Home = ({ servers }: HomeProps) => {
   }, [serversList, navigate]);
 
   return (
-    <div className="w-100">
-      <Card className="mx-auto" style={{ maxWidth: '720px' }}>
-        <div className="d-flex flex-column flex-md-row">
-          <div className="p-4 d-none d-md-flex align-items-center" style={{ width: '40%' }}>
-            <div className="w-100">
+    <div className="px-3 w-full">
+      <Card className="mx-auto max-w-[720px] overflow-hidden">
+        <div className="flex flex-col md:flex-row">
+          <div className="p-6 hidden md:flex items-center w-[40%]">
+            <div className="w-full">
               <ShlinkLogo />
             </div>
           </div>
 
-          <div className="home__servers-container flex-grow-1">
+          <div className="md:border-l border-lm-border dark:border-dm-border flex-grow">
             <h1
-              className={clsx('home__title p-4 text-center m-0', { 'border-bottom': !hasServers })}
-              style={{ borderColor: 'var(--border-color) !important' }}
+              className={clsx(
+                'p-4 text-center border-lm-border dark:border-dm-border',
+                { 'border-b': !hasServers },
+              )}
             >
               Welcome!
             </h1>
-            <ServersListGroup embedded servers={serversList}>
-              {!hasServers && (
-                <div className="p-4 text-center d-flex flex-column gap-5">
-                  <p className="mb-0">This application will help you manage your Shlink servers.</p>
-                  <p className="mb-0">
-                    <Link to="/server/create" className="btn btn-outline-primary btn-lg me-2">
-                      <FontAwesomeIcon icon={faPlus}/> <span className="ms-1">Add a server</span>
-                    </Link>
-                  </p>
-                  <p className="mb-0">
-                    <ExternalLink href="https://shlink.io/documentation">
-                      <small>
-                        <span className="me-2">Learn more about Shlink</span>
-                        <FontAwesomeIcon icon={faExternalLinkAlt}/>
-                      </small>
-                    </ExternalLink>
-                  </p>
-                </div>
-              )}
-            </ServersListGroup>
+            {hasServers ? <ServersListGroup servers={serversList} /> : (
+              <div className="p-6 text-center flex flex-col gap-12 text-xl">
+                <p>This application will help you manage your Shlink servers.</p>
+                <p>
+                  <Button to="/server/create" size="lg" inline>
+                    <FontAwesomeIcon icon={faPlus} widthAuto /> Add a server
+                  </Button>
+                </p>
+                <p>
+                  <ExternalLink href="https://shlink.io/documentation">
+                    <small>
+                      <span className="mr-2">Learn more about Shlink</span>
+                      <FontAwesomeIcon icon={faExternalLinkAlt} />
+                    </small>
+                  </ExternalLink>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </Card>
     </div>
   );
-};
+});

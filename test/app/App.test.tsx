@@ -1,50 +1,51 @@
-import { act, render, screen } from '@testing-library/react';
+import type { HttpClient } from '@shlinkio/shlink-js-sdk';
+import { act, screen } from '@testing-library/react';
 import { fromPartial } from '@total-typescript/shoehorn';
 import { MemoryRouter } from 'react-router';
-import { AppFactory } from '../../src/app/App';
+import { App } from '../../src/app/App';
+import { ContainerProvider } from '../../src/container/context';
+import type { ServerWithId } from '../../src/servers/data';
 import { checkAccessibility } from '../__helpers__/accessibility';
+import { renderWithStore } from '../__helpers__/setUpTest';
+
+vi.mock(import('../../src/common/ShlinkWebComponentContainer'), () => ({
+  ShlinkWebComponentContainer: () => <span>ShlinkWebComponentContainer</span>,
+}));
 
 describe('<App />', () => {
-  const App = AppFactory(
-    fromPartial({
-      MainHeader: () => <>MainHeader</>,
-      Home: () => <>Home</>,
-      ShlinkWebComponentContainer: () => <>ShlinkWebComponentContainer</>,
-      CreateServer: () => <>CreateServer</>,
-      EditServer: () => <>EditServer</>,
-      Settings: () => <>SettingsComp</>,
-      ManageServers: () => <>ManageServers</>,
-      ShlinkVersionsContainer: () => <>ShlinkVersions</>,
-    }),
-  );
-  const setUp = async (activeRoute = '/') => act(() => render(
+  const setUp = async (activeRoute = '/') => act(() => renderWithStore(
     <MemoryRouter initialEntries={[{ pathname: activeRoute }]}>
-      <App
-        fetchServers={() => {}}
-        servers={{}}
-        settings={fromPartial({})}
-        appUpdated={false}
-        resetAppUpdate={() => {}}
-      />
+      <ContainerProvider
+        value={fromPartial({
+          HttpClient: fromPartial<HttpClient>({}),
+          buildShlinkApiClient: vi.fn(),
+          useTimeoutToggle: vi.fn().mockReturnValue([false, vi.fn()]),
+        })}
+      >
+        <App />
+      </ContainerProvider>
     </MemoryRouter>,
+    {
+      initialState: {
+        servers: {
+          abc123: fromPartial<ServerWithId>({ id: 'abc123', name: 'abc123 server' }),
+          def456: fromPartial<ServerWithId>({ id: 'def456', name: 'def456 server' }),
+        },
+        settings: fromPartial({}),
+        appUpdated: false,
+      },
+    },
   ));
 
   it('passes a11y checks', () => checkAccessibility(setUp()));
 
-  it('renders children components', async () => {
-    await setUp();
-
-    expect(screen.getByText('MainHeader')).toBeInTheDocument();
-    expect(screen.getByText('ShlinkVersions')).toBeInTheDocument();
-  });
-
   it.each([
-    ['/settings/foo', 'SettingsComp'],
-    ['/settings/bar', 'SettingsComp'],
-    ['/manage-servers', 'ManageServers'],
-    ['/server/create', 'CreateServer'],
-    ['/server/abc123/edit', 'EditServer'],
-    ['/server/def456/edit', 'EditServer'],
+    ['/settings/general', 'User interface'],
+    ['/settings/short-urls', 'Short URLs form'],
+    ['/manage-servers', 'Add a server'],
+    ['/server/create', 'Add new server'],
+    ['/server/abc123/edit', 'Edit "abc123 server"'],
+    ['/server/def456/edit', 'Edit "def456 server"'],
     ['/server/abc123/foo', 'ShlinkWebComponentContainer'],
     ['/server/def456/bar', 'ShlinkWebComponentContainer'],
     ['/other', 'Oops! We could not find requested route.'],
@@ -54,13 +55,17 @@ describe('<App />', () => {
   });
 
   it.each([
-    ['/foo', 'shlink-wrapper'],
-    ['/bar', 'shlink-wrapper'],
-    ['/', 'shlink-wrapper d-flex align-items-center pt-3'],
-  ])('renders expected classes on shlink-wrapper based on current pathname', async (pathname, expectedClasses) => {
-    const { container } = await setUp(pathname);
-    const shlinkWrapper = container.querySelector('.shlink-wrapper');
+    ['/foo', false],
+    ['/bar', false],
+    ['/', true],
+  ])('renders expected classes on shlink-wrapper based on current pathname', async (pathname, isFlex) => {
+    await setUp(pathname);
+    const shlinkWrapper = screen.getByTestId('shlink-wrapper');
 
-    expect(shlinkWrapper).toHaveAttribute('class', expectedClasses);
+    if (isFlex) {
+      expect(shlinkWrapper).toHaveClass('flex');
+    } else {
+      expect(shlinkWrapper).not.toHaveClass('flex');
+    }
   });
 });

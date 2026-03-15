@@ -1,27 +1,17 @@
-import { useParsedQuery } from '@shlinkio/shlink-frontend-kit';
+import { Button, useParsedQuery } from '@shlinkio/shlink-frontend-kit';
 import type { FC } from 'react';
-import { Button } from 'reactstrap';
 import { NoMenuLayout } from '../common/NoMenuLayout';
-import type { FCWithDeps } from '../container/utils';
-import { componentFactory } from '../container/utils';
 import { useGoBack } from '../utils/helpers/hooks';
 import type { ServerData } from './data';
 import { isServerWithId } from './data';
 import { ServerForm } from './helpers/ServerForm';
-import type { WithSelectedServerProps } from './helpers/withSelectedServer';
 import { withSelectedServer } from './helpers/withSelectedServer';
+import { useSelectedServer } from './reducers/selectedServer';
+import { useServers } from './reducers/servers';
 
-type EditServerProps = WithSelectedServerProps & {
-  editServer: (serverId: string, serverData: ServerData) => void;
-};
-
-type EditServerDeps = {
-  ServerError: FC;
-};
-
-const EditServer: FCWithDeps<EditServerProps, EditServerDeps> = withSelectedServer((
-  { editServer, selectedServer, selectServer },
-) => {
+export const EditServer: FC = withSelectedServer(() => {
+  const { editServer } = useServers();
+  const { selectServer, selectedServer } = useSelectedServer();
   const goBack = useGoBack();
   const { reconnect } = useParsedQuery<{ reconnect?: 'true' }>();
 
@@ -40,15 +30,13 @@ const EditServer: FCWithDeps<EditServerProps, EditServerDeps> = withSelectedServ
   return (
     <NoMenuLayout>
       <ServerForm
-        title={<h5 className="mb-0">Edit &quot;{selectedServer.name}&quot;</h5>}
+        title={<>Edit &quot;{selectedServer.name}&quot;</>}
         initialValues={selectedServer}
         onSubmit={handleSubmit}
       >
-        <Button outline className="me-2" onClick={goBack}>Cancel</Button>
-        <Button outline color="primary">Save</Button>
+        <Button variant="secondary" onClick={goBack}>Cancel</Button>
+        <Button type="submit">Save</Button>
       </ServerForm>
     </NoMenuLayout>
   );
 });
-
-export const EditServerFactory = componentFactory(EditServer, ['ServerError']);

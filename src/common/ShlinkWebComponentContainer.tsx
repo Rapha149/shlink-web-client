@@ -1,40 +1,37 @@
-import type { ShlinkWebComponentType, TagColorsStorage } from '@shlinkio/shlink-web-component';
-import type { Settings } from '@shlinkio/shlink-web-component/settings';
+import type { TagColorsStorage } from '@shlinkio/shlink-web-component';
+import {
+  ShlinkSidebarToggleButton,
+  ShlinkSidebarVisibilityProvider,
+  ShlinkWebComponent,
+} from '@shlinkio/shlink-web-component';
 import type { FC } from 'react';
 import { memo } from 'react';
 import type { ShlinkApiClientBuilder } from '../api/services/ShlinkApiClientBuilder';
-import type { FCWithDeps } from '../container/utils';
-import { componentFactory, useDependencies } from '../container/utils';
+import { withDependencies } from '../container/context';
 import { isReachableServer } from '../servers/data';
-import type { WithSelectedServerProps } from '../servers/helpers/withSelectedServer';
+import { ServerError } from '../servers/helpers/ServerError';
 import { withSelectedServer } from '../servers/helpers/withSelectedServer';
+import { useSelectedServer } from '../servers/reducers/selectedServer';
+import { useSettings } from '../settings/reducers/settings';
 import { NotFound } from './NotFound';
 
-type ShlinkWebComponentContainerProps = WithSelectedServerProps & {
-  settings: Settings;
+export type ShlinkWebComponentContainerProps = {
+  TagColorsStorage: TagColorsStorage;
+  buildShlinkApiClient: ShlinkApiClientBuilder;
 };
 
-type ShlinkWebComponentContainerDeps = {
-  buildShlinkApiClient: ShlinkApiClientBuilder,
-  TagColorsStorage: TagColorsStorage,
-  ShlinkWebComponent: ShlinkWebComponentType,
-  ServerError: FC,
-};
-
-const ShlinkWebComponentContainer: FCWithDeps<
-  ShlinkWebComponentContainerProps,
-  ShlinkWebComponentContainerDeps
+const ShlinkWebComponentContainerBase: FC<
+  ShlinkWebComponentContainerProps
 // FIXME Using `memo` here to solve a flickering effect in charts.
 //       memo is probably not the right solution. The root cause is the withSelectedServer HOC, but I couldn't fix the
 //       extra rendering there.
 //       This should be revisited at some point.
-> = withSelectedServer(memo(({ selectedServer, settings }) => {
-  const {
-    buildShlinkApiClient,
-    TagColorsStorage: tagColorsStorage,
-    ShlinkWebComponent,
-    ServerError,
-  } = useDependencies(ShlinkWebComponentContainer);
+> = withSelectedServer(memo(({
+  buildShlinkApiClient,
+  TagColorsStorage: tagColorsStorage,
+}) => {
+  const { selectedServer } = useSelectedServer();
+  const { settings } = useSettings();
 
   if (!isReachableServer(selectedServer)) {
     return <ServerError />;
@@ -42,22 +39,24 @@ const ShlinkWebComponentContainer: FCWithDeps<
 
   const routesPrefix = `/server/${selectedServer.id}`;
   return (
-    <ShlinkWebComponent
-      serverVersion={selectedServer.version}
-      apiClient={buildShlinkApiClient(selectedServer)}
-      settings={settings}
-      routesPrefix={routesPrefix}
-      tagColorsStorage={tagColorsStorage}
-      createNotFound={(nonPrefixedHomePath) => (
-        <NotFound to={`${routesPrefix}${nonPrefixedHomePath}`}>List short URLs</NotFound>
-      )}
-    />
+    <ShlinkSidebarVisibilityProvider>
+      <ShlinkSidebarToggleButton className="fixed top-3.5 left-3 z-901" />
+      <ShlinkWebComponent
+        serverVersion={selectedServer.version}
+        apiClient={buildShlinkApiClient(selectedServer)}
+        settings={settings}
+        routesPrefix={routesPrefix}
+        tagColorsStorage={tagColorsStorage}
+        createNotFound={(nonPrefixedHomePath: string) => (
+          <NotFound to={`${routesPrefix}${nonPrefixedHomePath}`}>List short URLs</NotFound>
+        )}
+        autoSidebarToggle={false}
+      />
+    </ShlinkSidebarVisibilityProvider>
   );
 }));
 
-export const ShlinkWebComponentContainerFactory = componentFactory(ShlinkWebComponentContainer, [
+export const ShlinkWebComponentContainer = withDependencies(ShlinkWebComponentContainerBase, [
   'buildShlinkApiClient',
   'TagColorsStorage',
-  'ShlinkWebComponent',
-  'ServerError',
 ]);

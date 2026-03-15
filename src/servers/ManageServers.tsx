@@ -1,39 +1,29 @@
 import { faFileDownload as exportIcon, faPlus as plusIcon } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { TimeoutToggle } from '@shlinkio/shlink-frontend-kit';
-import { Result, SearchField, SimpleCard } from '@shlinkio/shlink-frontend-kit';
+import { Button, Result, SearchInput, SimpleCard, Table } from '@shlinkio/shlink-frontend-kit';
 import type { FC } from 'react';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router';
-import { Button } from 'reactstrap';
 import { NoMenuLayout } from '../common/NoMenuLayout';
-import type { FCWithDeps } from '../container/utils';
-import { componentFactory, useDependencies } from '../container/utils';
-import type { ServersMap } from './data';
-import type { ImportServersBtnProps } from './helpers/ImportServersBtn';
-import type { ManageServersRowProps } from './ManageServersRow';
+import { withDependencies } from '../container/context';
+import { ImportServersBtn } from './helpers/ImportServersBtn';
+import { withoutSelectedServer } from './helpers/withoutSelectedServer';
+import { ManageServersRow } from './ManageServersRow';
+import { useServers } from './reducers/servers';
 import type { ServersExporter } from './services/ServersExporter';
 
-type ManageServersProps = {
-  servers: ServersMap;
-};
-
-type ManageServersDeps = {
+export type ManageServersProps = {
   ServersExporter: ServersExporter;
-  ImportServersBtn: FC<ImportServersBtnProps>;
   useTimeoutToggle: TimeoutToggle;
-  ManageServersRow: FC<ManageServersRowProps>;
 };
 
 const SHOW_IMPORT_MSG_TIME = 4000;
 
-const ManageServers: FCWithDeps<ManageServersProps, ManageServersDeps> = ({ servers }) => {
-  const {
-    ServersExporter: serversExporter,
-    ImportServersBtn,
-    useTimeoutToggle,
-    ManageServersRow,
-  } = useDependencies(ManageServers);
+const ManageServersBase: FC<ManageServersProps> = withoutSelectedServer(({
+  ServersExporter: serversExporter,
+  useTimeoutToggle,
+}) => {
+  const { servers } = useServers();
   const [searchTerm, setSearchTerm] = useState('');
   const allServers = useMemo(() => Object.values(servers), [servers]);
   const filteredServers = useMemo(
@@ -41,57 +31,54 @@ const ManageServers: FCWithDeps<ManageServersProps, ManageServersDeps> = ({ serv
     [allServers, searchTerm],
   );
   const hasAutoConnect = allServers.some(({ autoConnect }) => !!autoConnect);
-  const [errorImporting, setErrorImporting] = useTimeoutToggle(false, SHOW_IMPORT_MSG_TIME);
+
+  const [errorImporting, setErrorImporting] = useTimeoutToggle({ delay: SHOW_IMPORT_MSG_TIME });
 
   return (
-    <NoMenuLayout className="d-flex flex-column gap-3">
-      <SearchField onChange={setSearchTerm} />
+    <NoMenuLayout className="flex flex-col gap-y-4">
+      <SearchInput onChange={setSearchTerm} />
 
-      <div className="d-flex flex-column flex-md-row gap-2">
-        <div className="d-flex gap-2">
-          <ImportServersBtn className="flex-fill" onImportError={setErrorImporting}>Import servers</ImportServersBtn>
+      <div className="flex flex-col md:flex-row gap-2">
+        <div className="flex gap-2">
+          <ImportServersBtn className="flex-grow" onError={setErrorImporting}>Import servers</ImportServersBtn>
           {filteredServers.length > 0 && (
-            <Button outline className="flex-fill" onClick={async () => serversExporter.exportServers()}>
-              <FontAwesomeIcon icon={exportIcon} fixedWidth /> Export servers
+            <Button variant="secondary" className="flex-grow" onClick={async () => serversExporter.exportServers()}>
+              <FontAwesomeIcon icon={exportIcon} widthAuto /> Export servers
             </Button>
           )}
         </div>
-        <Button outline color="primary" className="ms-md-auto" tag={Link} to="/server/create">
-          <FontAwesomeIcon icon={plusIcon} fixedWidth /> Add a server
+        <Button className="md:ml-auto" to="/server/create">
+          <FontAwesomeIcon icon={plusIcon} widthAuto /> Add a server
         </Button>
       </div>
 
-      <SimpleCard>
-        <table className="table table-hover responsive-table mb-0">
-          <thead className="responsive-table__header">
-            <tr>
-              {hasAutoConnect && <th style={{ width: '50px' }}><span className="sr-only">Auto-connect</span></th>}
-              <th>Name</th>
-              <th>Base URL</th>
-              <th><span className="sr-only">Options</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            {!filteredServers.length && <tr className="text-center"><td colSpan={4}>No servers found.</td></tr>}
-            {filteredServers.map((server) => (
-              <ManageServersRow key={server.id} server={server} hasAutoConnect={hasAutoConnect} />
-            ))}
-          </tbody>
-        </table>
+      <SimpleCard className="card">
+        <Table header={(
+          <Table.Row>
+            {hasAutoConnect && (
+              <Table.Cell className="w-[35px]"><span className="sr-only">Auto-connect</span></Table.Cell>
+            )}
+            <Table.Cell>Name</Table.Cell>
+            <Table.Cell>Base URL</Table.Cell>
+            <Table.Cell><span className="sr-only">Options</span></Table.Cell>
+          </Table.Row>
+        )}>
+          {!filteredServers.length && (
+            <Table.Row className="text-center"><Table.Cell colSpan={4}>No servers found.</Table.Cell></Table.Row>
+          )}
+          {filteredServers.map((server) => (
+            <ManageServersRow key={server.id} server={server} hasAutoConnect={hasAutoConnect} />
+          ))}
+        </Table>
       </SimpleCard>
 
       {errorImporting && (
         <div>
-          <Result type="error">The servers could not be imported. Make sure the format is correct.</Result>
+          <Result variant="error">The servers could not be imported. Make sure the format is correct.</Result>
         </div>
       )}
     </NoMenuLayout>
   );
-};
+});
 
-export const ManageServersFactory = componentFactory(ManageServers, [
-  'ServersExporter',
-  'ImportServersBtn',
-  'useTimeoutToggle',
-  'ManageServersRow',
-]);
+export const ManageServers = withDependencies(ManageServersBase, ['ServersExporter', 'useTimeoutToggle']);

@@ -3,36 +3,33 @@ import type { UserEvent } from '@testing-library/user-event';
 import { fromPartial } from '@total-typescript/shoehorn';
 import { MemoryRouter } from 'react-router';
 import type { ServerWithId } from '../../src/servers/data';
-import { ManageServersRowDropdownFactory } from '../../src/servers/ManageServersRowDropdown';
+import { ManageServersRowDropdown } from '../../src/servers/ManageServersRowDropdown';
 import { checkAccessibility } from '../__helpers__/accessibility';
-import { renderWithEvents } from '../__helpers__/setUpTest';
+import { renderWithStore } from '../__helpers__/setUpTest';
 
 describe('<ManageServersRowDropdown />', () => {
-  const ManageServersRowDropdown = ManageServersRowDropdownFactory(fromPartial({
-    DeleteServerModal: ({ isOpen }: { isOpen: boolean }) => (
-      <span>DeleteServerModal {isOpen ? '[OPEN]' : '[CLOSED]'}</span>
-    ),
-  }));
-  const setAutoConnect = vi.fn();
   const setUp = (autoConnect = false) => {
     const server = fromPartial<ServerWithId>({ id: 'abc123', autoConnect });
-    return renderWithEvents(
+    return renderWithStore(
       <MemoryRouter>
-        <ManageServersRowDropdown setAutoConnect={setAutoConnect} server={server} />
+        <ManageServersRowDropdown server={server} />
       </MemoryRouter>,
+      {
+        initialState: {
+          servers: { [server.id]: server },
+        },
+      },
     );
   };
   const toggleDropdown = (user: UserEvent) => user.click(screen.getByRole('button'));
 
-  it.each([
-    [setUp],
-    [async () => {
-      const { user, container } = setUp();
-      await toggleDropdown(user);
+  it('passes a11y checks', async () => {
+    const { user, container } = setUp();
+    // Open menu
+    await toggleDropdown(user);
 
-      return { container };
-    }],
-  ])('passes a11y checks', (setUp) => checkAccessibility(setUp()));
+    return checkAccessibility({ container });
+  });
 
   it('renders expected amount of dropdown items', async () => {
     const { user } = setUp();
@@ -46,26 +43,24 @@ describe('<ManageServersRowDropdown />', () => {
     expect(screen.getByRole('menuitem', { name: 'Edit server' })).toHaveAttribute('href', '/server/abc123/edit');
   });
 
-  it('allows toggling auto-connect', async () => {
-    const { user } = setUp();
+  it.each([true, false])('allows toggling auto-connect', async (autoConnect) => {
+    const { user, store } = setUp(autoConnect);
 
-    expect(setAutoConnect).not.toHaveBeenCalled();
     await toggleDropdown(user);
-    await user.click(screen.getByRole('menuitem', { name: 'Auto-connect' }));
-    expect(setAutoConnect).toHaveBeenCalledWith(expect.objectContaining({ id: 'abc123' }), true);
+    await user.click(screen.getByRole('menuitem', { name: autoConnect ? 'Do not auto-connect' : 'Auto-connect' }));
+
+    expect(Object.values(store.getState().servers)[0].autoConnect).toEqual(!autoConnect);
   });
 
   it('renders deletion modal', async () => {
     const { user } = setUp();
 
-    expect(screen.queryByText('DeleteServerModal [OPEN]')).not.toBeInTheDocument();
-    expect(screen.getByText('DeleteServerModal [CLOSED]')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
     await toggleDropdown(user);
     await user.click(screen.getByRole('menuitem', { name: 'Remove server' }));
 
-    expect(screen.getByText('DeleteServerModal [OPEN]')).toBeInTheDocument();
-    expect(screen.queryByText('DeleteServerModal [CLOSED]')).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it.each([[true], [false]])('renders expected size and icon', (autoConnect) => {
